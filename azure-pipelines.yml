@@ -1,0 +1,46 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+- main
+
+pool:
+  name: mylinux
+
+steps:
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      # create virtual environment
+      python3 -m venv .venv
+      source .venv/bin/activate
+      pip install -r requirements.txt
+
+  displayName: "Set Up Python"
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Run Tests
+      # Activate Python Env
+      source .venv/bin/activate
+      coverage run -m pytest -vs
+      coverage xml -o $(Build.SourcesDirectory)/coverage.xml
+  displayName: 'Run pytest with coverage'# Publish coverage results
+- task: PublishCodeCoverageResults@2
+  inputs:
+    summaryFileLocation: '$(Build.SourcesDirectory)/coverage.xml'
+    failIfCoverageEmpty: true
+  displayName: 'Publish code coverage'
+
+- task: WhiteSource@21
+  inputs:
+    cwd: '$(System.DefaultWorkingDirectory)'
+    projectName: 'AgileProject'
+    
+
+
+
